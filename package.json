@@ -1,0 +1,41 @@
+{
+  "name": "@pingid/prettier-plugin-sort-imports",
+  "version": "0.0.1",
+  "description": "A tiny Prettier plugin that keeps your import statements tidy.",
+  "author": "Dan Beaven <dm.beaven@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pingid/prettier-plugin-sort-imports.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/cjs/index.js",
+  "types": "lib/ts/index.d.ts",
+  "module": "lib/esm/index.js",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./lib/ts/index.d.ts",
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
+    }
+  },
+  "scripts": {
+    "build": "npm run esm && npm run cjs",
+    "format": "prettier --write .",
+    "esm": "tsc -p ./tsconfig.esm.json",
+    "cjs": "tsc -p ./tsconfig.cjs.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "prettier": "^3.5.3"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "printWidth": 120,
+    "trailingComma": "all"
+  }
+}
