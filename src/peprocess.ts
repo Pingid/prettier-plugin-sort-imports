@@ -42,6 +42,7 @@ export const preprocess = (text: string, options: Options) => {
 
 const flushBlocks = (blocks: string[][], text: string, options: Options) => {
   const next = Array.from({ length: blocks.length }, () => [] as string[])
+  let hasRelative = blocks[blocks.length - 1]!.some((line) => relative.test(line))
 
   for (let i = 0; i < blocks.length; i++) {
     for (let rawLine of blocks[i]!) {
@@ -51,7 +52,10 @@ const flushBlocks = (blocks: string[][], text: string, options: Options) => {
         if (!pruned) continue
         line = pruned
       }
-      if (relative.test(line)) next[blocks.length - 1]!.push(line)
+      if (relative.test(line)) {
+        hasRelative = true
+        next[blocks.length - 1]!.push(line)
+      } else if (hasRelative && i > 0 && i === blocks.length - 1) next[i - 1]!.push(line)
       else next[i]!.push(line)
     }
   }
@@ -64,19 +68,25 @@ const flushBlocks = (blocks: string[][], text: string, options: Options) => {
 }
 
 const pruneImport = (line: string, fileText: string): string | null => {
-  const re = /^import\s+(type\s+)?(.+?)\s+from\s+(['"].+['"])\s*;?$/
+  // allow . to match newlines with s flag
+  const re =
+    // import [type ]? <anything, including newlines> from '...';
+    /^import\s+(type\s+)?([\s\S]+?)\s+from\s+(['"].+['"])\s*;?$/s
   const m = line.match(re)
   if (!m) return line
 
   const [, isType, spec, mod] = m
   const count = (name: string) => (fileText.match(new RegExp(`\\b${name}\\b`, 'g')) || []).length
 
-  // only-named or default+named
+  // named imports → peel out what's inside { … }
   if (spec!.includes('{')) {
     const items = spec!
-      .replace(/^[^{]*{|}.*$/g, '')
+      .replace(/^[^{]*\{/, '') // drop everything up to first {
+      .replace(/\}.*$/, '') // drop everything after last }
       .split(',')
       .map((s) => s.trim())
+      .filter(Boolean)
+
     const keep = items.filter((item) => {
       const [orig, as] = item.split(/\s+as\s+/).map((s) => s.trim())
       return count(as || orig!) > 1
@@ -85,7 +95,7 @@ const pruneImport = (line: string, fileText: string): string | null => {
     return `import ${isType || ''}{ ${keep.join(', ')} } from ${mod}`
   }
 
-  // default-only or namespace
+  // default or namespace import
   const local = spec!.replace(/^\*\s+as\s+/, '').trim()
   return count(local) > 1 ? line : null
 }
