@@ -19,10 +19,10 @@ jobs:
 
       - name: install dependencies
         run: bun install
+      - name: run tests
+        run: bun test
       - name: transpile typescript
         run: bun run build
-      # - name: run tests
-      #   run: bun test
       - name: Get latest release tag
         id: latest_release_tag
         run: |
@@ -46,6 +46,8 @@ jobs:
 
       - name: install dependencies
         run: bun install
+      - name: run tests
+        run: bun test
       - name: transpile typescript
         run: bun run build
       - name: Get current version

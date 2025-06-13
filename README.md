@@ -16,7 +16,7 @@ yarn add -D @pingid/prettier-plugin-sort-imports
 npm i -D @pingid/prettier-plugin-sort-imports
 ```
 
-The plugin is automatically picked up by Prettier ³ when it is in your _node_modules_. If you prefer an explicit configuration, add it to your `.prettierrc`:
+Add the plugin to your configuration `.prettierrc`:
 
 ```json
 {
@@ -41,25 +41,6 @@ import a from 'a'
 import c from './utils/c'
 import b from './b'
 ```
-
-## Options
-
-### `importRemoveUnused`
-
-Removes unused imports from your files. When enabled, any imported identifiers that are not used elsewhere in the file will be removed from the import statement.
-
-**Usage:**
-
-If you want to enable this option, add it to your Prettier configuration:
-
-```json
-{
-  "plugins": ["@pingid/prettier-plugin-sort-imports"],
-  "importRemoveUnused": true
-}
-```
-
-By default, this option is `false` and unused imports will not be removed.
 
 ## License
 

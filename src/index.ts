@@ -1,7 +1,7 @@
 import { parsers } from 'prettier/plugins/typescript'
 import type { Options } from 'prettier'
 
-import { preprocess } from './peprocess.js'
+import { preprocess } from './preprocess.js'
 
 export default {
   parsers: { typescript: { ...parsers.typescript, preprocess } },
