@@ -3,7 +3,6 @@
 A tiny Prettier ³ plugin that keeps your import statements tidy.
 
 - Groups consecutive `import ...` lines that are separated by blank lines.
-- Keeps **external** (package) imports first and moves **relative** imports (paths that start with `./` or `../`) to the bottom of the group.
 - Within every group the lines are reordered by length – the longest import goes on top.
 
 ## Installation

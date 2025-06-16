@@ -1,6 +1,6 @@
 {
   "name": "@pingid/prettier-plugin-sort-imports",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A tiny Prettier plugin that keeps your import statements tidy.",
   "author": "Dan Beaven <dm.beaven@gmail.com>",
   "repository": {

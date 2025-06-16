@@ -1,4 +1,4 @@
-const blockEnd = /from\s['"].{1,}['"]$/
+const blockEnd = /from\s['"].{1,}['"]/
 const relative = /from\s+['"]\.[\s\S]*?['"]/m
 
 type Options = { importRemoveUnused?: boolean }
@@ -40,7 +40,7 @@ export const preprocess = (text: string, options: Options) => {
   return result
 }
 
-const flushBlocks = (blocks: string[][], text: string, options: Options) => {
+const flushBlocks = (blocks: string[][], _text: string, _options: Options) => {
   const next = Array.from({ length: blocks.length }, () => [] as string[])
   let relativeIndex = null as number | null
   // let hasRelative = blocks[blocks.length - 1]!.some((line) => relative.test(line))
