@@ -41,6 +41,43 @@ import c from './utils/c'
 import b from './b'
 ```
 
+### Option: `shiftRelativeImports`
+
+Moves relative imports (`./` or `../`) into a section **below** absolute imports.  
+Still sorts by line length **within each group** and preserves blank lines between original relative-only groups.
+
+**Default:** `false`
+
+**Prettier config:**
+
+```json
+{
+  "plugins": ["@pingid/prettier-plugin-sort-imports"],
+  "shiftRelativeImports": true
+}
+```
+
+**Example (simple):**
+
+```ts
+// before
+import a from '../relative'
+import { b, c } from 'b'
+
+import d from 'c'
+import { e, f } from 'd'
+import { g, h } from '../relative'
+
+// after
+import { b, c } from 'b'
+
+import d from 'c'
+import { e, f } from 'd'
+
+import { g, h } from '../relative'
+import a from '../relative'
+```
+
 ## License
 
 This project is licensed under the MIT License.
