@@ -1,6 +1,6 @@
 {
   "name": "@pingid/prettier-plugin-sort-imports",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A tiny Prettier plugin that keeps your import statements tidy.",
   "author": "Dan Beaven <dm.beaven@gmail.com>",
   "repository": {
@@ -22,16 +22,17 @@
   },
   "scripts": {
     "build": "tsc && unbuild",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "node tests/run.test.ts",
+    "bench": "node bench/run.ts",
+    "bench:update": "npm run build && node bench/run.ts --update"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
+    "tinybench": "^4.0.1",
     "typescript": "^5.8.3",
-    "unbuild": "^3.5.0",
-    "vitest": "^3.2.3"
-  },
-  "dependencies": {
-    "prettier": "^3.5.3"
+    "prettier": "^3.5.3",
+    "unbuild": "^3.5.0"
   },
   "prettier": {
     "semi": false,

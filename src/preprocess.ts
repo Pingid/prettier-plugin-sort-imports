@@ -1,26 +1,8 @@
 const importStart = /^\s*import\s/
-const importEnd = /from\s+['"][^'"]+['"]\s*;?\s*$/
+const importEnd = /(?:from\s+['"][^'"]+['"]|import\s+['"][^'"]+['"])\s*;?\s*$/ // handles bare imports
 
 type Options = {
-  /**
-   * If true, relative imports will be shifted to a second group bellow absolute import groups.
-   * @default false
-   */
   shiftRelativeImports?: boolean
-}
-
-const emitGroups = (groups: string[][], out: string[]) => {
-  if (!groups.length) return
-  const body = groups
-    .map((g) =>
-      g
-        .slice()
-        .sort((a, b) => b.length - a.length)
-        .join('\n'),
-    )
-    .join('\n\n')
-  out.push(body)
-  groups.length = 0
 }
 
 const isRelativeImport = (stmt: string) => {
@@ -29,42 +11,49 @@ const isRelativeImport = (stmt: string) => {
 }
 
 const emitImportGroups = (groups: string[][], out: string[], options?: Options) => {
+  if (!groups.length) return
+
+  let ordered = groups
+
   if (options?.shiftRelativeImports) {
     const absGroups: string[][] = []
     const relSections: string[][] = []
-    let relCollector: string[] = []
+    let relCollector: string[] | null = null
 
     for (const g of groups) {
+      if (!g.length) continue
       const abs: string[] = []
       const rel: string[] = []
-      for (const stmt of g) (isRelativeImport(stmt) ? rel : abs).push(stmt)
+      for (let i = 0; i < g.length; i++) (isRelativeImport(g[i]!) ? rel : abs).push(g[i]!)
 
       if (abs.length) absGroups.push(abs)
 
       if (rel.length) {
         if (abs.length) {
-          // mixed group → accumulate relatives
+          if (!relCollector) relCollector = []
           relCollector.push(...rel)
         } else {
-          // relative-only group
-          if (relCollector.length) {
-            // merge the accumulated mixed relatives into this group
-            relSections.push([...relCollector, ...rel])
-            relCollector = []
+          if (relCollector?.length) {
+            relSections.push(relCollector.concat(rel))
+            relCollector = null
           } else {
-            // standalone relative-only section
-            relSections.push(rel.slice())
+            relSections.push(rel)
           }
         }
       }
     }
-
-    if (relCollector.length) relSections.push(relCollector)
-
-    groups.length = 0
-    groups.push(...absGroups, ...relSections)
+    if (relCollector?.length) relSections.push(relCollector)
+    ordered = absGroups.concat(relSections)
   }
-  emitGroups(groups, out)
+
+  // sort each group in place and emit with single join
+  const chunks: string[] = []
+  for (const g of ordered) {
+    if (g.length > 1) g.sort((a, b) => b.length - a.length)
+    chunks.push(g.join('\n'))
+  }
+  out.push(chunks.join('\n\n'))
+  groups.length = 0
 }
 
 export const preprocess = (text: string, options: Options) => {
@@ -76,12 +65,10 @@ export const preprocess = (text: string, options: Options) => {
   let openStmt: string[] | null = null
 
   const endOpenStmtIntoGroup = () => {
-    if (openStmt) {
-      const full = openStmt.join('\n').trimEnd()
-      if (!curGroup) curGroup = []
-      curGroup.push(full)
-      openStmt = null
-    }
+    if (!openStmt) return
+    const full = openStmt.join('\n').trimEnd()
+    ;(curGroup ??= []).push(full)
+    openStmt = null
   }
 
   for (let i = 0; i < lines.length; i++) {
@@ -94,24 +81,22 @@ export const preprocess = (text: string, options: Options) => {
     }
 
     if (importStart.test(line)) {
-      if (!curGroup) curGroup = []
+      curGroup ??= []
       if (importEnd.test(line)) curGroup.push(line.trimEnd())
       else openStmt = [line]
 
-      // Only consume a following blank if it separates two import groups.
+      // only consume a single blank that separates two import groups
       const next = lines[i + 1]
       const next2 = lines[i + 2]
-      const nextIsBlank = next !== undefined && next.trim() === ''
-      const afterBlankIsImport = next2 !== undefined && importStart.test(next2)
-      if (nextIsBlank && afterBlankIsImport) {
+      if (next !== undefined && next.trim() === '' && next2 !== undefined && importStart.test(next2)) {
         groups.push(curGroup)
         curGroup = null
-        i += 1 // consume exactly one blank between groups
+        i += 1
       }
       continue
     }
 
-    // Non-import line
+    // non-import line
     const prev = lines[i - 1]
     const hadBlankBetweenImportsAndCode = !!prev && prev.trim() === ''
 
@@ -121,9 +106,8 @@ export const preprocess = (text: string, options: Options) => {
       curGroup = null
     }
     if (groups.length) {
-      // 🔁 use new wrapper
       emitImportGroups(groups, out, options)
-      if (hadBlankBetweenImportsAndCode) out.push('') // mirror original single blank
+      if (hadBlankBetweenImportsAndCode) out.push('')
     }
 
     out.push(line)
