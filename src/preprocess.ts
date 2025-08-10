@@ -2,7 +2,6 @@ const importStart = /^\s*import\s/
 const importEnd = /from\s+['"][^'"]+['"]\s*;?\s*$/
 
 type Options = {
-  importRemoveUnused?: boolean
   /**
    * If true, relative imports will be shifted to a second group bellow absolute import groups.
    * @default false
@@ -24,7 +23,51 @@ const emitGroups = (groups: string[][], out: string[]) => {
   groups.length = 0
 }
 
-export const preprocess = (text: string, _options: Options) => {
+const isRelativeImport = (stmt: string) => {
+  const m = stmt.match(/from\s+['"]([^'"]+)['"]/)
+  return !!(m && m[1] && m[1].startsWith('.'))
+}
+
+const emitImportGroups = (groups: string[][], out: string[], options?: Options) => {
+  if (options?.shiftRelativeImports) {
+    const absGroups: string[][] = []
+    const relSections: string[][] = []
+    let relCollector: string[] = []
+
+    for (const g of groups) {
+      const abs: string[] = []
+      const rel: string[] = []
+      for (const stmt of g) (isRelativeImport(stmt) ? rel : abs).push(stmt)
+
+      if (abs.length) absGroups.push(abs)
+
+      if (rel.length) {
+        if (abs.length) {
+          // mixed group → accumulate relatives
+          relCollector.push(...rel)
+        } else {
+          // relative-only group
+          if (relCollector.length) {
+            // merge the accumulated mixed relatives into this group
+            relSections.push([...relCollector, ...rel])
+            relCollector = []
+          } else {
+            // standalone relative-only section
+            relSections.push(rel.slice())
+          }
+        }
+      }
+    }
+
+    if (relCollector.length) relSections.push(relCollector)
+
+    groups.length = 0
+    groups.push(...absGroups, ...relSections)
+  }
+  emitGroups(groups, out)
+}
+
+export const preprocess = (text: string, options: Options) => {
   const lines = text.split('\n')
   const out: string[] = []
 
@@ -78,7 +121,8 @@ export const preprocess = (text: string, _options: Options) => {
       curGroup = null
     }
     if (groups.length) {
-      emitGroups(groups, out)
+      // 🔁 use new wrapper
+      emitImportGroups(groups, out, options)
       if (hadBlankBetweenImportsAndCode) out.push('') // mirror original single blank
     }
 
@@ -87,7 +131,7 @@ export const preprocess = (text: string, _options: Options) => {
 
   endOpenStmtIntoGroup()
   if (curGroup) groups.push(curGroup)
-  if (groups.length) emitGroups(groups, out)
+  if (groups.length) emitImportGroups(groups, out, options)
 
   let result = out.join('\n')
   result = result.replace(/\n+$/g, '\n')

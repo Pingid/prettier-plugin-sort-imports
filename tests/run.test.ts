@@ -15,7 +15,12 @@ for (const testName of tests) {
   const testResult = fs.readFileSync(path.join(testPath, 'expect.ts'), 'utf8')
 
   test(testName, () => {
-    const result = preprocess(testFile, {})
+    const result = preprocess(testFile, {
+      shiftRelativeImports: testName.includes('relative-'),
+    })
+    if (result !== testResult) {
+      console.log(result)
+    }
     expect(result).toEqual(testResult)
   })
 }

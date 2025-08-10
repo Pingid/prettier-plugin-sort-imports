@@ -6,11 +6,11 @@ import { preprocess } from './preprocess.js'
 export default {
   parsers: { typescript: { ...parsers.typescript, preprocess } },
   options: {
-    importRemoveUnused: {
+    shiftRelativeImports: {
       type: 'boolean',
       category: 'Global',
       default: false,
-      description: 'Remove unused imports',
+      description: 'Move relative imports into a final group below absolute imports',
     },
   } satisfies Options,
 }
