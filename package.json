@@ -1,6 +1,6 @@
 {
   "name": "@pingid/prettier-plugin-sort-imports",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A tiny Prettier plugin that keeps your import statements tidy.",
   "author": "Dan Beaven <dm.beaven@gmail.com>",
   "repository": {
@@ -18,6 +18,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./sort": {
+      "types": "./dist/sort.d.ts",
+      "import": "./dist/sort.mjs",
+      "require": "./dist/sort.cjs"
     }
   },
   "scripts": {

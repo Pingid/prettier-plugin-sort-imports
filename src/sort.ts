@@ -5,58 +5,7 @@ type Options = {
   shiftRelativeImports?: boolean
 }
 
-const isRelativeImport = (stmt: string) => {
-  const m = stmt.match(/from\s+['"]([^'"]+)['"]/)
-  return !!(m && m[1] && m[1].startsWith('.'))
-}
-
-const emitImportGroups = (groups: string[][], out: string[], options?: Options) => {
-  if (!groups.length) return
-
-  let ordered = groups
-
-  if (options?.shiftRelativeImports) {
-    const absGroups: string[][] = []
-    const relSections: string[][] = []
-    let relCollector: string[] | null = null
-
-    for (const g of groups) {
-      if (!g.length) continue
-      const abs: string[] = []
-      const rel: string[] = []
-      for (let i = 0; i < g.length; i++) (isRelativeImport(g[i]!) ? rel : abs).push(g[i]!)
-
-      if (abs.length) absGroups.push(abs)
-
-      if (rel.length) {
-        if (abs.length) {
-          if (!relCollector) relCollector = []
-          relCollector.push(...rel)
-        } else {
-          if (relCollector?.length) {
-            relSections.push(relCollector.concat(rel))
-            relCollector = null
-          } else {
-            relSections.push(rel)
-          }
-        }
-      }
-    }
-    if (relCollector?.length) relSections.push(relCollector)
-    ordered = absGroups.concat(relSections)
-  }
-
-  // sort each group in place and emit with single join
-  const chunks: string[] = []
-  for (const g of ordered) {
-    if (g.length > 1) g.sort((a, b) => b.length - a.length)
-    chunks.push(g.join('\n'))
-  }
-  out.push(chunks.join('\n\n'))
-  groups.length = 0
-}
-
-export const preprocess = (text: string, options: Options) => {
+export const sort = (text: string, options: Options) => {
   const lines = text.split('\n')
   const out: string[] = []
 
@@ -121,4 +70,55 @@ export const preprocess = (text: string, options: Options) => {
   result = result.replace(/\n+$/g, '\n')
   if (!result.endsWith('\n')) result += '\n'
   return result
+}
+
+const isRelativeImport = (stmt: string) => {
+  const m = stmt.match(/from\s+['"]([^'"]+)['"]/)
+  return !!(m && m[1] && m[1].startsWith('.'))
+}
+
+const emitImportGroups = (groups: string[][], out: string[], options?: Options) => {
+  if (!groups.length) return
+
+  let ordered = groups
+
+  if (options?.shiftRelativeImports) {
+    const absGroups: string[][] = []
+    const relSections: string[][] = []
+    let relCollector: string[] | null = null
+
+    for (const g of groups) {
+      if (!g.length) continue
+      const abs: string[] = []
+      const rel: string[] = []
+      for (let i = 0; i < g.length; i++) (isRelativeImport(g[i]!) ? rel : abs).push(g[i]!)
+
+      if (abs.length) absGroups.push(abs)
+
+      if (rel.length) {
+        if (abs.length) {
+          if (!relCollector) relCollector = []
+          relCollector.push(...rel)
+        } else {
+          if (relCollector?.length) {
+            relSections.push(relCollector.concat(rel))
+            relCollector = null
+          } else {
+            relSections.push(rel)
+          }
+        }
+      }
+    }
+    if (relCollector?.length) relSections.push(relCollector)
+    ordered = absGroups.concat(relSections)
+  }
+
+  // sort each group in place and emit with single join
+  const chunks: string[] = []
+  for (const g of ordered) {
+    if (g.length > 1) g.sort((a, b) => b.length - a.length)
+    chunks.push(g.join('\n'))
+  }
+  out.push(chunks.join('\n\n'))
+  groups.length = 0
 }

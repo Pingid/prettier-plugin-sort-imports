@@ -1,10 +1,10 @@
 import { parsers } from 'prettier/plugins/typescript'
 import type { Options } from 'prettier'
 
-import { preprocess } from './preprocess.js'
+import { sort } from './sort.js'
 
 export default {
-  parsers: { typescript: { ...parsers.typescript, preprocess } },
+  parsers: { typescript: { ...parsers.typescript, preprocess: sort } },
   options: {
     shiftRelativeImports: {
       type: 'boolean',

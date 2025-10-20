@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import path from 'node:path'
 import fs from 'node:fs'
 
-import { preprocess } from '../src/preprocess.ts'
+import { sort } from '../src/sort.ts'
 
 const tests = fs
   .readdirSync(path.join(import.meta.dirname))
@@ -15,7 +15,7 @@ for (const testName of tests) {
   const testResult = fs.readFileSync(path.join(testPath, 'expect.ts'), 'utf8')
 
   test(testName, () => {
-    const result = preprocess(testFile, {
+    const result = sort(testFile, {
       shiftRelativeImports: testName.includes('relative-'),
     })
     if (result !== testResult) {
