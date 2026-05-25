@@ -1,4 +1,4 @@
-const importStart = /^\s*import\s/
+const importStart = /^\s*(?:import\s|export\s+(?:type\s+)?(?:\{|\*))/
 const importEnd = /(?:from\s+['"][^'"]+['"]|import\s+['"][^'"]+['"])\s*;?\s*$/ // handles bare imports
 
 type Options = {
