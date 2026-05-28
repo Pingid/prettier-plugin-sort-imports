@@ -1,5 +1,6 @@
 const importStart = /^\s*(?:import\s|export\s+(?:type\s+)?(?:\{|\*))/
-const importEnd = /(?:from\s+['"][^'"]+['"]|import\s+['"][^'"]+['"])\s*;?\s*$/ // handles bare imports
+// handles bare imports and tolerates a trailing line comment on the same line
+const importEnd = /(?:from\s+['"][^'"]+['"]|import\s+['"][^'"]+['"])\s*;?\s*(?:\/\/.*)?$/
 
 type Options = {
   shiftRelativeImports?: boolean
@@ -77,6 +78,19 @@ const isRelativeImport = (stmt: string) => {
   return !!(m && m[1] && m[1].startsWith('.'))
 }
 
+// side-effect imports (`import 'foo'`) carry semantics tied to source order, so we pin them
+// to the top of their group rather than reordering by length.
+const isSideEffectImport = (stmt: string) => /^\s*import\s+['"]/.test(stmt)
+
+// emit a single group: pinned side-effects first (source order), the rest length-sorted desc.
+const emitGroup = (stmts: string[]): string => {
+  const pinned: string[] = []
+  const rest: string[] = []
+  for (const s of stmts) (isSideEffectImport(s) ? pinned : rest).push(s)
+  if (rest.length > 1) rest.sort((a, b) => b.length - a.length)
+  return pinned.concat(rest).join('\n')
+}
+
 const emitImportGroups = (groups: string[][], out: string[], options?: Options) => {
   if (!groups.length) return
 
@@ -89,14 +103,20 @@ const emitImportGroups = (groups: string[][], out: string[], options?: Options) 
 
     for (const g of groups) {
       if (!g.length) continue
+      const pinned: string[] = []
       const abs: string[] = []
       const rel: string[] = []
-      for (let i = 0; i < g.length; i++) (isRelativeImport(g[i]!) ? rel : abs).push(g[i]!)
+      for (const s of g) {
+        if (isSideEffectImport(s)) pinned.push(s)
+        else if (isRelativeImport(s)) rel.push(s)
+        else abs.push(s)
+      }
 
-      if (abs.length) absGroups.push(abs)
+      // side-effects pin to their original group rather than shifting with relatives
+      if (pinned.length || abs.length) absGroups.push(pinned.concat(abs))
 
       if (rel.length) {
-        if (abs.length) {
+        if (pinned.length || abs.length) {
           if (!relCollector) relCollector = []
           relCollector.push(...rel)
         } else {
@@ -113,12 +133,8 @@ const emitImportGroups = (groups: string[][], out: string[], options?: Options) 
     ordered = absGroups.concat(relSections)
   }
 
-  // sort each group in place and emit with single join
   const chunks: string[] = []
-  for (const g of ordered) {
-    if (g.length > 1) g.sort((a, b) => b.length - a.length)
-    chunks.push(g.join('\n'))
-  }
+  for (const g of ordered) chunks.push(emitGroup(g))
   out.push(chunks.join('\n\n'))
   groups.length = 0
 }

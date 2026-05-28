@@ -2,7 +2,7 @@ import { Bench } from 'tinybench'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { preprocess } from '../src/preprocess.ts'
+import { sort } from '../src/sort.ts'
 
 const stmt = (n, rel) =>
   `import { ${Array.from({ length: n }, (_, i) => `a${i}`).join(', ')} } from '${rel ? './a' : 'a'}'`
@@ -18,7 +18,7 @@ const cases = [
 
 const run = async () => {
   const b = new Bench({ time: 1000, warmupTime: 250 })
-  for (const c of cases) b.add(c.name, () => preprocess(c.src, {}))
+  for (const c of cases) b.add(c.name, () => sort(c.src, {}))
   await b.run()
 
   const res = Object.fromEntries(
