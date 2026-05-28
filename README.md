@@ -1,9 +1,10 @@
 # @pingid/prettier-plugin-sort-imports
 
-A tiny Prettier ³ plugin that keeps your import statements tidy.
+A tiny Prettier 3 plugin that keeps your import statements tidy.
 
 - Groups consecutive `import ...` lines that are separated by blank lines.
 - Within every group the lines are reordered by length – the longest import goes on top.
+- Side-effect imports (`import 'foo'`) are pinned to the top of their group in source order, since their order is semantically meaningful.
 
 ## Installation
 
@@ -39,6 +40,22 @@ import a from 'a'
 
 import c from './utils/c'
 import b from './b'
+```
+
+### Side-effect imports
+
+Bare `import 'foo'` statements are pinned at the top of their group in source order, because reordering them can change runtime behaviour (CSS resets, polyfills, registrations).
+
+```ts
+// before
+import a from 'a'
+import 'reset.css'
+import { b, c, d } from 'b'
+
+// after
+import 'reset.css'
+import { b, c, d } from 'b'
+import a from 'a'
 ```
 
 ### Option: `shiftRelativeImports`

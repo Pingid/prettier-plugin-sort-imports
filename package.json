@@ -1,18 +1,38 @@
 {
   "name": "@pingid/prettier-plugin-sort-imports",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "A tiny Prettier plugin that keeps your import statements tidy.",
   "author": "Dan Beaven <dm.beaven@gmail.com>",
+  "homepage": "https://github.com/Pingid/prettier-plugin-sort-imports#readme",
+  "bugs": {
+    "url": "https://github.com/Pingid/prettier-plugin-sort-imports/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Pingid/prettier-plugin-sort-imports.git"
   },
+  "keywords": [
+    "prettier",
+    "prettier-plugin",
+    "imports",
+    "sort",
+    "typescript"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
   "license": "MIT",
   "type": "module",
   "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
   "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -28,9 +48,12 @@
   "scripts": {
     "build": "tsc && unbuild",
     "format": "prettier --write .",
-    "test": "node tests/run.test.ts",
-    "bench": "node bench/run.ts",
-    "bench:update": "npm run build && node bench/run.ts --update"
+    "test": "node --experimental-strip-types tests/run.test.ts",
+    "bench": "node --experimental-strip-types bench/run.ts",
+    "bench:update": "npm run build && node --experimental-strip-types bench/run.ts --update"
+  },
+  "peerDependencies": {
+    "prettier": "^3"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
@@ -43,9 +66,6 @@
     "semi": false,
     "singleQuote": true,
     "printWidth": 120,
-    "trailingComma": "all",
-    "ignore": [
-      "tests/**/*"
-    ]
+    "trailingComma": "all"
   }
 }
